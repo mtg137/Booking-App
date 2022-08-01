@@ -1,7 +1,61 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+import '@openzeppelin/contracts/utils/math/SafeMath.sol';
+import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import '@openzeppelin/contracts/utils/Counters.sol';
+import './Room.sol';
 
-contract Booking {
+contract Booking is Room{
+  using SafeMath for uint256;
+  using Counters for Counters.Counter;
+
+  struct BookingItem{
+    uint roomId;
+    uint bookingId;
+    uint bookingDate;
+    uint amountPaid;
+    address payable tenant;
+  }
+
+  BookingItem[] public bookings;
+
+  uint public totalBookings;
+  Counters.Counter private _bookingIds;
+
+  event CheckoutSuccessfull(address indexed tenant, uint indexed roomId, uint indexed date);
+
   constructor() public {
+    totalBookings = 0;
+  }
+
+  function bookRoom(uint _index,uint _numOfNights) public payable nonReentrant roomExists(_index) isNotBooked(_index){
+    RoomItem storage room = rooms[_index];
+    uint totalPayableAmount = _numOfNights.mul(room.pricePerNight);
+    require(msg.sender != room.user,"You cannot book your own room");
+    require(msg.sender.balance >= totalPayableAmount,"Insufficient Funds");
+    //require(totalPayableAmount == msg.value,"Please enter the correct amount");
+    require(_numOfNights != 0,"Number of nights cannot be zero");
+    _bookingIds.increment();
+    uint currentBookingId = _bookingIds.current();
+    room.user.transfer(msg.value);
+    _setBooked(_index);
+    _registerBooking(room.id,currentBookingId,msg.value, payable(msg.sender));
+    roomTenant[room.id] = msg.sender;
+  }
+
+  function checkOut(uint _index) public payable nonReentrant {
+    RoomItem storage room = rooms[_index];
+    require(room.isBooked == true,"Room is not booked");
+    require(msg.sender == roomTenant[room.id],"You currently dont reside in this room");
+    room.isBooked = false;
+    emit CheckoutSuccessfull(msg.sender,room.id,block.timestamp);
+  }
+
+  function _registerBooking(uint _roomId, uint _bookingId,uint _amountPaid, address payable _tenant) internal{
+    assert(_tenant != address(0));
+    BookingItem memory newBooking = BookingItem(_roomId,_bookingId, block.timestamp,_amountPaid,_tenant);
+    bookings.push(newBooking);
+    totalBookings = totalBookings.add(1);
+    emit RoomBooked(block.timestamp, msg.sender,msg.value,_roomId);
   }
 }
