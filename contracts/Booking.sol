@@ -19,15 +19,23 @@ contract Booking is Room{
 
   BookingItem[] public bookings;
 
-  uint public totalBookings;
+  uint public totalBookings = 0;
   Counters.Counter private _bookingIds;
 
   event CheckoutSuccessfull(address indexed tenant, uint indexed roomId, uint indexed date);
 
   constructor() public {
-    totalBookings = 0;
+
   }
 
+  function _registerBooking(uint _roomId, uint _bookingId,uint _amountPaid, address payable _tenant) internal{
+    assert(_tenant != address(0));
+    BookingItem memory newBooking = BookingItem(_roomId,_bookingId, block.timestamp,_amountPaid,_tenant);
+    bookings.push(newBooking);
+    totalBookings = totalBookings.add(1);
+    emit RoomBooked(block.timestamp, msg.sender,msg.value,_roomId);
+  }
+  
   function bookRoom(uint _roomId,uint _numOfNights) public payable nonReentrant roomExists(_roomId) isNotBooked(_roomId){
     RoomItem storage room = roomItemId[_roomId];
     uint totalPayableAmount = _numOfNights.mul(room.pricePerNight);
@@ -51,11 +59,4 @@ contract Booking is Room{
     emit CheckoutSuccessfull(msg.sender,room.id,block.timestamp);
   }
 
-  function _registerBooking(uint _roomId, uint _bookingId,uint _amountPaid, address payable _tenant) internal{
-    assert(_tenant != address(0));
-    BookingItem memory newBooking = BookingItem(_roomId,_bookingId, block.timestamp,_amountPaid,_tenant);
-    bookings.push(newBooking);
-    totalBookings = totalBookings.add(1);
-    emit RoomBooked(block.timestamp, msg.sender,msg.value,_roomId);
-  }
 }
