@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import Navbar from './components/Navbar';
+import NewHotel from './components/NewHotel';
 import HotelList from './components/HotelList';
 import Web3 from 'web3';
 import HotelContract from '../src/abi/Hotel.json';
@@ -13,12 +14,14 @@ export default class App extends Component {
       totalHotels: null,
       hotels: [],
       hotelListingFee:null,
+      loading:true,
     }
   }
 
   async componentWillMount(){
     await this.loadWeb3();
     await this.loadBlockchain();
+    await this.fetchHotels();
   }
 
   async loadWeb3(){
@@ -62,16 +65,32 @@ export default class App extends Component {
         this.setState({ hotelListingFee: feeAmount });
       }).catch((err) => {
         console.log(err);
-      })
+      });
     }else{
       window.alert("Failed to fectch hotel contract");
     }
   }
 
+  async fetchHotels() {
+    for (let i = 0; i < this.state.totalHotels; i++) {
+    const result = await this.state.hotelContractABI.methods.hotelItems(i).call().then((hotel) => {
+        this.setState({
+          hotels: [...this.state.hotels, hotel]
+        });
+        //console.log([this.state.hotels]);
+      }).catch((err) => {
+        console.error(err);
+      });
+    }
+  }
     render(){
       return (
           <React.Fragment>
           <Navbar account={this.state.account}/>
+          <NewHotel hotelContract={this.state.hotelContractABI}
+            listingFee={this.state.hotelListingFee}
+            account={this.state.account}
+            />
           <HotelList hotelContract={this.state.hotelContractABI} 
                      totalHotels={this.state.totalHotels}
                      listingFee={this.state.hotelListingFee}
