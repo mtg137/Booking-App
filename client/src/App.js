@@ -140,16 +140,13 @@ export default class App extends Component {
                     hotelContract={this.state.hotelContractABI}
                     account={this.state.account}
           />
-          <NewHotel hotelContract={this.state.hotelContractABI}
-            listingFee={this.state.hotelListingFee}
-            account={this.state.account}
-            provider={this.state.provider}
-            />
+    
           <HotelList hotelContract={this.state.hotelContractABI}
                      totalHotels={this.state.totalHotels}
                      listingFee={this.state.hotelListingFee}
                      hotels={this.state.hotels}
                       account={this.state.account}
+                      provider={this.state.provider}
                      />
           </React.Fragment>
       );
