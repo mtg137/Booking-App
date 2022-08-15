@@ -66,6 +66,7 @@ export default class App extends Component {
     //Detect change in network
     window.ethereum.on('networkChanged', async (netId) => {
       this.setState({ networkId: netId });
+      window.location.reload();
     });
     const hotelContractData = HotelContract.networks[this.state.networkId];
     if (hotelContractData){
@@ -91,7 +92,7 @@ export default class App extends Component {
       await this.setState({ isLoading: false });
     }else{
       this.setState({ isLoading: true });
-      window.alert("Kindly switch your network to Polygon Mumbai Tesnet");
+      window.alert("Kindly switch your network to Polygon Mumbai Testnet");
     }
   }
 
